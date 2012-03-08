@@ -1,0 +1,122 @@
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+
+import aima.search.framework.Problem;
+import aima.search.framework.Search;
+import aima.search.framework.SearchAgent;
+import aima.search.informed.HillClimbingSearch;
+import aima.search.informed.SimulatedAnnealingSearch;
+
+
+
+public class RescatDemo {
+    private static int voltes;
+    public static void main(String[] args){
+       for(int j=0;j<20;j++){
+           voltes=voltes+500;
+       for(int i=0; i < 10; i++){
+
+        RescatBoard RB=new RescatBoard(20,2);
+        //RB.ShowSortides();
+
+        RescatHeuristicFunction1 rhf=new RescatHeuristicFunction1();
+        //System.out.println("* Temps emprat pel rescat: "+rhf.getHeuristicValue(RB));
+        //RHillClimbingSearch(RB);
+        RSimulatedAnnealingSearch(RB);
+       }
+        }
+    }
+    
+    private static void RHillClimbingSearch(RescatBoard RB) {
+      //System.out.println("\n#######################");
+      //System.out.println("# Rescat HillClimbing #");
+      //System.out.println("#######################");
+
+        try {
+            Problem problem =  new Problem(RB,new RescatSuccessorFunction(), new RescatGoalTest(),new RescatHeuristicFunction1());
+            Search search =  new HillClimbingSearch();
+            SearchAgent agent = new SearchAgent(problem,search);
+            
+            //System.out.println();
+            //printActions(agent.getActions());
+            //printInstrumentation(agent.getInstrumentation());
+            RescatHeuristicFunction1 HF = new RescatHeuristicFunction1();
+            RescatBoard rescat = ((RescatBoard) ((HillClimbingSearch) search).getLastSearchState());
+            double h1 = HF.getHeuristicValue(rescat);
+
+            int nodes = Integer.parseInt( (String) agent.getInstrumentation().get("nodesExpanded"));
+
+            System.out.print("HC(100,10) S.Annealing | ");
+            System.out.print(h1);
+            System.out.println(" | " + nodes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    
+    private static void RSimulatedAnnealingSearch(RescatBoard RB) {
+<<<<<<< .mine
+        //System.out.println("\n##############################");
+        //System.out.println("# Rescat Simulated Annealing #");
+        //System.out.println("##############################");
+=======
+>>>>>>> .r145
+            long ini, fi;
+
+        try {
+            Problem problem =  new Problem(RB,new RescatSuccessorFunctionSA(), new RescatGoalTest(),new RescatHeuristicFunction1());
+
+            SimulatedAnnealingSearch search =  new SimulatedAnnealingSearch(voltes,10,5,0.001);
+            //search.traceOn();
+            ini = System.currentTimeMillis();
+            SearchAgent agent = new SearchAgent(problem,search);
+            fi = System.currentTimeMillis();
+
+            //System.out.println();
+            //printActions(agent.getActions());
+            //printInstrumentation(agent.getInstrumentation());
+            RescatHeuristicFunction1 HF = new RescatHeuristicFunction1();
+            RescatBoard rescat = ((RescatBoard) ((SimulatedAnnealingSearch) search).getLastSearchState());
+            double h1 = HF.getHeuristicValue(rescat);
+
+            int steps = agent.getActions().size();
+
+<<<<<<< .mine
+            System.out.print("SA(50,5) | ");
+=======
+            System.out.print("SA(100,10) | ");
+>>>>>>> .r145
+            System.out.print(h1);
+            System.out.print(" | " + voltes);
+            System.out.print(" | " + steps);
+            System.out.println(" | " + (fi - ini));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printInstrumentation(Properties properties) {
+        Iterator keys = properties.keySet().iterator();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
+            String property = properties.getProperty(key);
+            System.out.println(key + " : " + property);
+        }
+        
+    }
+    
+    private static void printActions(List actions) {
+        for (int i = 0; i < actions.size(); i++) {
+            String action = (String) actions.get(i);
+            System.out.println(action);
+        }
+    }
+    
+    
+}
+
+

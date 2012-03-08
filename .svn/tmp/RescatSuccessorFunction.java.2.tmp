@@ -1,0 +1,129 @@
+
+//~--- non-JDK imports --------------------------------------------------------
+
+
+import aima.search.framework.Successor;
+import aima.search.framework.SuccessorFunction;
+
+//~--- JDK imports ------------------------------------------------------------
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.LinkedList;
+
+/**
+ * @author Ravi Mohan
+ *
+ */
+
+public class RescatSuccessorFunction implements SuccessorFunction {
+    public List getSuccessors(Object aState) {
+        ArrayList                retVal = new ArrayList();
+        RescatBoard             board  = (RescatBoard) aState;
+        RescatHeuristicFunction RHF  = new RescatHeuristicFunction();
+        int nh=board.getnh();
+        int ng=board.getngrups();
+           LinkedList<LinkedList<Integer>> [] sortides = board.getsortides();
+           LinkedList<Integer> auxlist;
+           LinkedList<Integer> auxlist2;
+           LinkedList<LinkedList<Integer>> [] auxsortides = new LinkedList[nh];
+
+<<<<<<< .mine
+
+=======
+>>>>>>> .r122
+        // No permitimos intercambiar la primera ciudad
+        for(int l=0;l<nh;l++){
+            for(int m=0;m<sortides[l].size();m++){
+                auxlist2=sortides[l].get(m);
+                for(int n=0;n<auxlist2.size();n++){
+                    for (int i = 0; i < nh; i++) {
+                        for (int j = 0; j < sortides[i].size(); j++) {
+                            auxlist=sortides[i].get(j);
+                            if (auxlist.size() < 3)
+                            {
+                                for (int k=0; k < auxlist.size(); k++){
+
+                                    auxsortides = move(l,m,n,i,j,k,sortides);
+
+                                    RescatBoard newBoard = new RescatBoard(ng,nh);
+
+                                    newBoard.setsortides(auxsortides);
+
+                                    double    v = RHF.getHeuristicValue(newBoard);
+                                    String S = new String("Moviment del grup "+ n + "de la sortida" + m + " del h" + l + " al grup "+ k + "de la sortida" + j + " del h " + i + " | Coste(" + v + ")");
+
+                                    retVal.add(new Successor(S, newBoard));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+<<<<<<< .mine
+
+
+=======
+>>>>>>> .r122
+        return retVal;
+    }
+
+    public RescatBoard MoureGrup(RescatBoard rb){
+        RescatBoard board=(RescatBoard)state;
+        int nh=board.getnh();
+        int ng=board.getngrups();
+        double [][] dist=board.getdistancies();
+        int n=0;
+        Integer origen= new Integer(ng);
+        int desti=0;
+        LinkedList auxlist;
+        LinkedList auxlist2;
+        LinkedList<LinkedList<Integer>> [] sortides = board.getsortides();
+        for (int i=0;i<nh;i++){
+           auxlist= sortides[i];
+           n=sortides[i].size();
+           origen=ng;
+
+           for(int j=0;j<n;j++){
+             for(int k=0;k<n;k++){
+                auxlist2 = (LinkedList) auxlist.get(j);
+               for (int x=0;x<auxlist2.size();x++){
+                    desti=(Integer)auxlist2.get(k);
+            return rb;
+            }
+        }
+
+    }
+<<<<<<< .mine
+=======
+
+    public void swap(int nh1, int s1, int g1, int nh2, int s2, int g2, LinkedList<LinkedList<Integer>> [] sortides){
+        LinkedList<Integer> auxlist = sortides[nh1].get(s1);
+        int aux1 = auxlist.get(g1);
+        LinkedList<Integer> auxlist2 = sortides[nh2].get(s2);
+        int aux2 = auxlist.get(g2);
+        sortides[nh1].get(s1).set(g1, aux2);
+        sortides[nh2].get(s2).set(g2, aux1);
+    }
+    
+    public LinkedList<LinkedList<Integer>> [] move(int nh1, int s1, int g, int nh2, int s2, int pos, LinkedList<LinkedList<Integer>> [] sortides){
+        LinkedList<LinkedList<Integer>> [] auxsortides = sortides.clone();
+        LinkedList<Integer> auxlist = sortides[nh1].get(s1);
+        int aux1 = auxlist.get(g);
+        auxsortides[nh1].get(s1).remove(g);
+        if(sortides[nh1].get(s1).size()==0){
+            auxsortides[nh1].remove(s1);
+        }
+        if(sortides[nh2].size()<s2){
+            auxsortides[nh2].add(new LinkedList<Integer>());
+        }
+        LinkedList<Integer> auxlist2 = sortides[nh2].get(s2);
+        auxsortides[nh2].get(s2).add(pos, aux1);
+        return auxsortides;
+    }
+}
+>>>>>>> .r122
+
+
+//~ Formatted by Jindent --- http://www.jindent.com

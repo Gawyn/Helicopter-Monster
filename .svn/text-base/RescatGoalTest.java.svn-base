@@ -1,0 +1,11 @@
+
+import aima.search.framework.GoalTest;
+
+
+public class RescatGoalTest implements GoalTest {
+
+  public boolean isGoalState(Object aState) {
+    return(false);
+  }
+
+}

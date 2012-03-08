@@ -1,0 +1,359 @@
+/*!
+ * REpresentacion del estado del problema del viajante de comercio
+ */
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Random;
+
+public class RescatBoard {
+
+  private static final int area = 50;
+  private static final int hcap = 15;
+  private static final int hspeed = 100;
+  private static final int hmaxgroups = 3;
+  private static final int load_time = 5;
+  private static final int base_time = 10;
+
+  /// String que describe el operador
+  public static String INTERCAMBIO = "Intercambio";
+
+  public class ginfo {
+    boolean prio;
+    int npers;
+    int pos_x;
+    int pos_y;
+    int id;
+    public ginfo(boolean p, int np, int x, int y, int ident) {
+      id = ident;
+      prio = p;
+      npers = np;
+      pos_x=x;
+      pos_y=y;
+    }
+  }
+  /// Nombre de grups a rescatar
+  private int ngroups;
+  /// Nombre d'helicopters de rescat
+  private int nhelic;
+  private boolean [] visitats;
+  /// Array de grups amb camps <prioritat, numpersones>
+  private ginfo [] grups;
+  /// Array de sortides dels helicopters
+  private LinkedList<Integer> [] sortides;
+  /// Distancias entre grups inclosa la base
+  private double [][] dist;
+
+  /*!\brief Genera una instancia del problema de Rescat
+   *
+   * Crea una nova instancia del problema de rescat de grups amb ng grups i nh helicopters
+   * 
+   * @param [in] ng Nombre de grups
+   * @param [in] nh Nombre d'helicopters
+   */
+  public RescatBoard(int ng, int nh) {
+    Random myRandom=new Random();
+    int d;
+    visitats = new boolean[ng];
+    sortides = new LinkedList[nh];
+    for(int i=0; i<nh; i++){
+        sortides[i] = new LinkedList<Integer>();
+    }
+    for(int i=0;i<ng;i++){
+        visitats[i]=false;
+    }
+    ngroups = ng;
+    nhelic=nh;
+    dist= new double[ng+1][ng+1];
+    grups = new ginfo [ng+1];
+    int impx=0;
+    int impy=0;
+    //Això és per generar grups aleatoris.
+    for (int i=0; i<ng; i++){
+        boolean b=false;
+        int aux = myRandom.nextInt(3);
+        if(aux==2) b=true;
+        impx=myRandom.nextInt(50);
+        impy=myRandom.nextInt(50);
+        System.out.print("Grup:"+i+"=>"+impx+","+impy);
+        System.out.println();
+        grups[i]=new ginfo(b,myRandom.nextInt(11)+1,impx,impy,i);
+    }
+    grups[ng]=new ginfo(false,0,0,0,ng);
+    //Aquest bucle serveix pel càlcul de distàncies.
+    for (int i=0; i<ng+1; i++){
+        for (int j=0; j<ng+1; j++){
+         if(i==j) dist[i][j]=10000;
+         else{
+             double aux_x=grups[i].pos_x-grups[j].pos_x;
+             double aux_y=grups[i].pos_y-grups[j].pos_y;
+             dist[i][j]=java.lang.Math.hypot(aux_x, aux_y);
+             System.out.print("Distancia de:"+i+" a "+j+" és de "+dist[i][j]);
+             System.out.println();
+         }
+        }
+    }
+    SolucioProximitat();
+    ShowSortides();
+  }
+
+  private void ShowSortides(){
+      double printdist;
+      Integer origen= new Integer(ngroups);
+      Integer desti;
+      printdist=0;
+      for(int i=0;i<nhelic;i++){
+          LinkedList auxlist = sortides[i];
+          System.out.print("Helic."+i+":");
+          for(int j=0; j<auxlist.size(); j++){
+              desti=(Integer)auxlist.get(j);
+              printdist=printdist+dist[origen][desti];
+              origen=desti;
+              System.out.print(" => "+auxlist.get(j)+"("+grups[(Integer)auxlist.get(j)].npers+")");
+          }
+          System.out.print(". Distancia:"+printdist);
+          System.out.println();
+      }
+  }
+  private void SolucioAleatoria(){
+      int[] personeshel=new int[nhelic];
+      int[] grupshel=new int[nhelic];
+      for(int i=0;i<nhelic;i++){
+          personeshel[i]=0;
+      }
+      Random myRandom=new Random();
+      int auxng=ngroups;
+      Integer auxint;
+      int random; //Random serà el grup escollit a l'atzar per ser recollit
+      int randomhel;
+      ArrayList<ginfo> copiagrups;
+      copiagrups = new ArrayList<ginfo>(Arrays.asList(grups));
+      while(auxng>0){
+          random=myRandom.nextInt(auxng);
+          randomhel=myRandom.nextInt(nhelic);
+          if(copiagrups.get(random).npers>(15-personeshel[randomhel])){
+                personeshel[randomhel]=0;
+                auxint = new Integer(ngroups); //Afegim un viatge a la base
+                sortides[randomhel].add(auxint);
+                grupshel[randomhel]=0;
+          }
+          else{
+            auxint = new Integer(copiagrups.get(random).id);
+            sortides[randomhel].add(auxint);
+            personeshel[randomhel]=personeshel[randomhel]+copiagrups.get(random).npers;
+            copiagrups.remove(random);
+            auxng--;
+            grupshel[randomhel]++;
+            if(grupshel[randomhel]==3){
+                grupshel[randomhel]=0;
+                personeshel[randomhel]=0;
+                auxint = new Integer(ngroups); //Afegim un viatge a la base
+                sortides[randomhel].add(auxint);
+            }
+          }
+      }
+      for(int i=0;i<nhelic;i++){
+          if(sortides[i].getLast().intValue()!= ngroups ){
+            auxint = new Integer(ngroups); //Afegim un viatge a la base
+            sortides[i].add(auxint);
+          }
+      }
+  }
+
+  private void SolucioProximitat(){
+      int[] posiciohel=new int[nhelic];
+      for(int i=0;i<nhelic;i++){
+          posiciohel[i]=ngroups;
+      }
+      int[] personeshel=new int[nhelic];
+      int[] grupshel=new int[nhelic];
+      for(int i=0;i<nhelic;i++){
+          personeshel[i]=0;
+      }
+      double auxdist= 1000000000;
+      int auxng=ngroups;
+      Integer auxint;
+      int grupproper=0; //Grupproper serà el grup més proper a l'actual helicopter.
+      int hel=0;
+      while(auxng>0){
+          //Busca el grup mes proper a l'actual helicopter
+          for(int i=0;i<ngroups;i++){
+              if(dist[posiciohel[hel]][i]<auxdist && visitats[i]==false){
+                  auxdist=dist[posiciohel[hel]][i];
+                  grupproper=i;
+              }
+          }
+          posiciohel[hel]=grupproper;
+          auxdist=1000000000;
+          //Comprova restricció de 15 pers màxim i si és així tornem a la base
+          if(grups[grupproper].npers>(15-personeshel[hel])){
+                personeshel[hel]=0;
+                auxint = new Integer(ngroups); //Afegim un viatge a la base
+                sortides[hel].add(auxint);
+                grupshel[hel]=0;
+                posiciohel[hel]=ngroups;
+          }
+          else{
+            auxint = new Integer(grupproper);
+            sortides[hel].add(auxint);
+            personeshel[hel]=personeshel[hel]+grups[grupproper].npers;
+            visitats[grupproper]=true;
+            auxng--;
+            grupshel[hel]++;
+            //Comprovem la restricció de 3 grups màxim per helicopter
+            if(grupshel[hel]==3){
+                grupshel[hel]=0;
+                personeshel[hel]=0;
+                auxint = new Integer(ngroups); //Afegim un viatge a la base
+                sortides[hel].add(auxint);
+            }
+          }
+          //El pròxim viatge l'assignarem a un altre helicopter
+          // No calia fer tantes comprovacions:
+          hel++;
+          hel = hel % nhelic;
+
+      }
+      for(int i=0;i<nhelic;i++){
+          if(sortides[i].getLast().intValue()!= ngroups ){
+            auxint = new Integer(ngroups); //Afegim un viatge a la base
+            sortides[i].add(auxint);
+          }
+      }
+  }
+  /*
+    public RescatBoard(int nc, int seed) {
+        Random myRandom=new Random();
+        int d;
+
+        myRandom.setSeed(seed);
+        path=new int[nc];
+        dist= new int[nc][nc];
+        ncities=nc;
+
+        for (int i = 0; i < nc; i++) path[i]=i;
+
+        for (int i = 0; i < nc; i++)
+          for (int j = i; j < nc; j++)
+            if (i==j) dist[i][j]=0;
+            else {
+              d=  myRandom.nextInt(50)+10;
+              dist[i][j]=d;
+              dist[j][i]=d;
+            }
+
+  }
+*/
+  /*!\brief Genera una instancia del TSP con un camino inicial y una matriz de distancias
+   *
+   * Genera una instancia del problema del viajante de comercio recibiendo el numero de ciudades
+   * el camino inicial y la matriz de distancias
+   *
+   * @param[in] nc Numero de ciudades
+   * @param[in] p Camino inicial
+   * @param[in] d matriz de distancias
+   *
+   */
+  /*
+  public RescatBoard(int nc, int [] p, int [][] d) {
+
+    path=new int[nc];
+    dist= new int[nc][nc];
+    
+    ncities=nc;
+    for (int i = 0; i < nc; i++) {
+      path[i]=p[i];
+    }
+
+    for (int i = 0; i < nc; i++)
+      for (int j = 0; j < nc; j++)
+        dist[i][j]=d[i][j];
+  }
+*/
+  /*!\brief Retorna el numero de ciudades de la instancia
+   *
+   */
+  /*
+  public int getNCities(){return(ncities);}
+  */
+  /*!\brief Retorna el camino entre las ciudades
+   *
+   */
+  /*
+  public int [] getPath(){return(path);}
+  */
+  /*!\brief Retorna la matriz de distancias
+   *
+   */
+  //public int [][] getDists(){return(dist);}
+   
+  /*!\brief Retorna la distancia entre la ciudad i y la siguiente ciudad en el camino
+   *
+   */
+  /*
+  public int distCities(int i){
+    if (i<ncities-1) return(dist[path[i]][path[i+1]]);
+    else return(dist[path[i]][path[0]]);
+  }
+*/
+  /*!\Brief Intercambia dos ciudades en el recorrido
+   *
+   * \pre los valores han de ser validos
+   */
+  /*
+  public void swapCities(int i, int j){
+    int tmp;
+
+    tmp=path[i];
+    path[i]=path[j];
+    path[j]=tmp;
+  }
+*/
+  /*!\brief Retorna un string indicando la diferencia entre los recorridos
+   *
+   */
+  /*
+  public String getDiff(RescatBoard t){
+   int [] b;
+   String s="Intercambio ciudad ";
+   boolean primera=true;
+
+   b=t.getPath();
+
+   for (int i=0;i<ncities;i++){
+     if(b[i]!=path[i]){
+       if (primera) {
+         primera=false;
+         s=s+path[i]+" con ";
+       } else s=s+path[i];
+     }
+   }
+
+   return(s);
+  }
+ */
+   /*!\brief Retorna el coste del recorrido
+    *
+    */
+  /*
+  public int pathCost(){
+   int sum=0;
+   for(int i=0;i<ncities;i++) sum=sum+distCities(i);
+   return sum;
+  }
+  */
+  
+  /*!\brief Retorna el recorrido como un string
+   *
+   */
+  /*
+  public String toString() {
+    String retVal = "|";
+    for (int i = 0; i < ncities; i++) {
+      retVal = retVal + path[i] + "|";
+    }
+    return retVal;
+  }
+   * */
+}
